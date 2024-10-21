@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: operator-lifecycle-manager
+  namespace: argocd
+spec:
+  destination:
+    namespace: olm
+    name: in-cluster
+  project: default
+  source:
+    path: manifests/operator-lifecycle-manager
+    # repoURL: https://github.com/kuadrant/deployment
+    # targetRevision: HEAD
+    repoURL: https://github.com/roivaz/kuadrant-deployment
+    targetRevision: argocd-setup
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

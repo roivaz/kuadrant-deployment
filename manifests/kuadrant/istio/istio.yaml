@@ -1,0 +1,28 @@
+apiVersion: sailoperator.io/v1alpha1
+kind: Istio
+metadata:
+  name: default
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  version: v1.23.0
+  namespace: istio-system
+  # Disable autoscaling to reduce dev resources
+  values:
+    pilot:
+      autoscaleEnabled: false
+
+---
+# Configure envoy access logging.
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: mesh-default
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  accessLogging:
+    - providers:
+        - name: envoy
