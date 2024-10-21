@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kuadrant-install
+  namespace: argocd
+spec:
+  ignoreApplicationDifferences:
+    - jsonPointers:
+        - /spec/syncPolicy
+        - /spec/source/targetRevision
+  goTemplate: true
+  generators:
+    - git:
+        # repoURL: https://github.com/kuadrant/deployment
+        # revision: HEAD
+        repoURL: https://github.com/roivaz/kuadrant-deployment
+        revision: argocd-setup
+        files:
+          - path: manifests/kuadrant/**/argocd-config.yaml
+  template:
+    metadata:
+      name: "{{.path.basename}}"
+    spec:
+      project: default
+      source:
+        # repoURL: https://github.com/kuadrant/deployment
+        # targetRevision: main
+        repoURL: https://github.com/roivaz/kuadrant-deployment
+        targetRevision: argocd-setup
+        path: "{{.path.path}}"
+      destination:
+        name: in-cluster
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
