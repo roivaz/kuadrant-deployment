@@ -4,7 +4,7 @@ BINARY=$1
 PID_FILE=$2
 LOG_FILE=$3
 
-set -e
+# set -e
 
 if [[ -f ${PID_FILE} ]]; then
     PID=$(cat ${PID_FILE})
