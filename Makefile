@@ -6,8 +6,8 @@ SHELL = /usr/bin/env bash -o pipefail
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
-OS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ARCH := $(shell uname -m | tr '[:upper:]' '[:lower:]')
+OS := $(shell go env GOOS)
+ARCH := $(shell go env GOARCH)
 # Container Engine to be used for building image and with kind
 CONTAINER_ENGINE ?= docker
 
@@ -49,17 +49,36 @@ CPK_PID_FILE = tmp/cloud-provider-kind.pid
 
 start-cloud-provider-kind: tmp
 	hack/run-background-process.sh $(KIND_CLOUD_PROVIDER) $(CPK_PID_FILE) tmp/cloud-provider-kind.log
+
 stop-cloud-provider-kind:
-	- kill -TERM $(shell cat $(CPK_PID_FILE)) && rm $(CPK_PID_FILE)
+	- test -f $(CPK_PID_FILE) && kill -TERM $$(cat $(CPK_PID_FILE)) && rm $(CPK_PID_FILE)
 
 ##@ ArgoCD management targets
 ARGOCD_PASSWD = $(shell kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
 ARGOCD_IP = $(shell kubectl -n argocd get svc argocd-server -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
-argocd-url:
-	@echo -e "\tURL: \thttps://$(ARGOCD_IP)"
-	@echo -e "\tuser: \tadmin"
-	@echo -e "\tpass: \t$(ARGOCD_PASSWD)"
 
+argocd-url:
+	@echo -e "\n"
+	@echo -e ">>> ArgoCD is now available at:"
+	@echo -e ">>> \tURL: \thttps://$(ARGOCD_IP)"
+	@echo -e ">>> \tuser: \tadmin"
+	@echo -e ">>> \tpass: \t$(ARGOCD_PASSWD)"
+	@echo -e "\n"
+
+argocd-login:
+	$(ARGOCD) login $(ARGOCD_IP):443 --insecure --username admin --password $(ARGOCD_PASSWD)
+
+##@ Local setup
+
+local-setup: kind-create-cluster-1 kind-create-cluster-2
+	kubectl config set-context kind-kuadrant-local-1
+	$(MAKE) kind-apply-argocd
+	kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=120s
+	kubectl -n argocd wait --for=jsonpath='{.status.loadBalancer.ingress}' service/argocd-server
+	$(MAKE) argocd-login && $(ARGOCD) cluster add kind-kuadrant-local-2 --yes --cluster-endpoint kube-public
+	$(MAKE) argocd-url
+
+tear-down: kind-delete-cluster-1 kind-delete-cluster-2
 
 ##@ Tooling
 
@@ -85,10 +104,10 @@ kind-cloud-provider: $(KIND_CLOUD_PROVIDER) ## Download kind locally if necessar
 $(KIND_CLOUD_PROVIDER): $(LOCALBIN)
 	test -s $(KIND_CLOUD_PROVIDER) ||GOBIN=$(LOCALBIN) go install sigs.k8s.io/cloud-provider-kind@$(KIND_CLOUD_PROVIDER_VERSION)
 
-##@ Install argocd
+##@ Install argocd-cli
 ARGOCD ?= $(LOCALBIN)/argocd
-ARGOCD_VERSION ?= v2.4.12
-ARGOCD_DOWNLOAD_URL ?= https://github.com/argoproj/argo-cd/releases/download/v2.4.13/argocd-$(OS)-$(ARCH)
+ARGOCD_VERSION ?= v2.12.6
+ARGOCD_DOWNLOAD_URL ?= https://github.com/argoproj/argo-cd/releases/download/$(ARGOCD_VERSION)/argocd-$(OS)-$(ARCH)
 argocd: $(ARGOCD) ## Download argocd CLI locally if necessary
 $(ARGOCD):
 	curl -sL $(ARGOCD_DOWNLOAD_URL) -o $(ARGOCD)
