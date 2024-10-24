@@ -47,7 +47,7 @@ kind-apply-argocd: kustomize
 ##@ Kind cloud provider
 CPK_PID_FILE = tmp/cloud-provider-kind.pid
 
-start-cloud-provider-kind: tmp
+start-cloud-provider-kind: kind-cloud-provider tmp
 	hack/run-background-process.sh $(KIND_CLOUD_PROVIDER) $(CPK_PID_FILE) tmp/cloud-provider-kind.log
 
 stop-cloud-provider-kind:
@@ -65,12 +65,12 @@ argocd-url:
 	@echo -e ">>> \tpass: \t$(ARGOCD_PASSWD)"
 	@echo -e "\n"
 
-argocd-login:
+argocd-login: argocd
 	$(ARGOCD) login $(ARGOCD_IP):443 --insecure --username admin --password $(ARGOCD_PASSWD)
 
 ##@ Local setup
 
-local-setup: kind-create-cluster-1 kind-create-cluster-2
+local-setup: argocd kind-create-cluster-1 kind-create-cluster-2
 	kubectl config set-context kind-kuadrant-local-1
 	$(MAKE) kind-apply-argocd
 	kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=120s
@@ -80,13 +80,16 @@ local-setup: kind-create-cluster-1 kind-create-cluster-2
 
 tear-down: kind-delete-cluster-1 kind-delete-cluster-2
 
+clean:
+	rm -rf tmp bin kubeconfig
+
 ##@ Tooling
 
 KUSTOMIZE = $(PROJECT_PATH)/bin/kustomize
 KUSTOMIZE_VERSION = v5@v5.5.0
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
-$(KUSTOMIZE):
+$(KUSTOMIZE): $(LOCALBIN)
 	 test -s $(KUSTOMIZE) || GOBIN=$(LOCALBIN) go install sigs.k8s.io/kustomize/kustomize/$(KUSTOMIZE_VERSION)
 
 
@@ -102,13 +105,13 @@ KIND_CLOUD_PROVIDER_VERSION ?= latest
 .PHONY: kind-cloud-provider
 kind-cloud-provider: $(KIND_CLOUD_PROVIDER) ## Download kind locally if necessary
 $(KIND_CLOUD_PROVIDER): $(LOCALBIN)
-	test -s $(KIND_CLOUD_PROVIDER) ||GOBIN=$(LOCALBIN) go install sigs.k8s.io/cloud-provider-kind@$(KIND_CLOUD_PROVIDER_VERSION)
+	test -s $(KIND_CLOUD_PROVIDER) || GOBIN=$(LOCALBIN) go install sigs.k8s.io/cloud-provider-kind@$(KIND_CLOUD_PROVIDER_VERSION)
 
 ##@ Install argocd-cli
 ARGOCD ?= $(LOCALBIN)/argocd
 ARGOCD_VERSION ?= v2.12.6
 ARGOCD_DOWNLOAD_URL ?= https://github.com/argoproj/argo-cd/releases/download/$(ARGOCD_VERSION)/argocd-$(OS)-$(ARCH)
 argocd: $(ARGOCD) ## Download argocd CLI locally if necessary
-$(ARGOCD):
+$(ARGOCD): $(LOCALBIN)
 	curl -sL $(ARGOCD_DOWNLOAD_URL) -o $(ARGOCD)
 	chmod +x $(ARGOCD)
