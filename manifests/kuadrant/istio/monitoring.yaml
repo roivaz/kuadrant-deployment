@@ -1,4 +1,4 @@
-# TODO: no monitoring stack configured yet
+# [TODO] no monitoring stack configured yet
 # apiVersion: monitoring.coreos.com/v1
 # kind: ServiceMonitor
 # metadata:

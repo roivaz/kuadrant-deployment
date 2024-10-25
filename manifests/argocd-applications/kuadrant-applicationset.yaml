@@ -29,7 +29,7 @@ spec:
         # repoURL: https://github.com/kuadrant/deployment
         # targetRevision: main
         repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: argocd-multicluster-metallb
+        targetRevision: ha-setup
         path: "{{.path.path}}"
       destination:
         name: "{{.name}}"

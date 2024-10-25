@@ -15,11 +15,11 @@ spec:
     pilot:
       autoscaleMin: 2
       autoscaleMax: 4
-      # Resources for a small pilot install
+      # [NOTE] values set to minimize resource consumption on a local env
       resources:
         requests:
-          cpu: 500m
-          memory: 2048Mi
+          cpu: 10m
+          memory: 10Mi
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
