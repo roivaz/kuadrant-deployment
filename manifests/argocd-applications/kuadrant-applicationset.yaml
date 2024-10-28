@@ -10,16 +10,19 @@ spec:
         - /spec/source/targetRevision
   goTemplate: true
   generators:
-    - git:
-        # repoURL: https://github.com/kuadrant/deployment
-        # revision: HEAD
-        repoURL: https://github.com/roivaz/kuadrant-deployment
-        revision: argocd-setup
-        files:
-          - path: manifests/kuadrant/**/argocd-config.yaml
+    - matrix:
+        generators:
+          - clusters: {}
+          - git:
+              # repoURL: https://github.com/kuadrant/deployment
+              # revision: HEAD
+              repoURL: https://github.com/roivaz/kuadrant-deployment
+              revision: argocd-setup
+              files:
+                - path: manifests/kuadrant/**/argocd-config.yaml
   template:
     metadata:
-      name: "{{.path.basename}}"
+      name: "{{.path.basename}}.{{.name}}"
     spec:
       project: default
       source:
@@ -29,7 +32,7 @@ spec:
         targetRevision: argocd-multicluster-metallb
         path: "{{.path.path}}"
       destination:
-        name: in-cluster
+        name: "{{.name}}"
       syncPolicy:
         automated:
           prune: true

@@ -1,0 +1,34 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: operator-lifecycle-manager
+  namespace: argocd
+spec:
+  ignoreApplicationDifferences:
+    - jsonPointers:
+        - /spec/syncPolicy
+        - /spec/source/targetRevision
+  goTemplate: true
+  generators:
+    - clusters: {}
+  template:
+    metadata:
+      name: "olm.{{.nameNormalized}}"
+    spec:
+      destination:
+        namespace: olm
+        name: "{{.name}}"
+      project: default
+      source:
+        path: manifests/operator-lifecycle-manager
+        # repoURL: https://github.com/kuadrant/deployment
+        # targetRevision: HEAD
+        repoURL: https://github.com/roivaz/kuadrant-deployment
+        targetRevision: argocd-multicluster-metallb
+      syncPolicy:
+        automated:
+          selfHeal: true
+          prune: true
+        syncOptions:
+          - ServerSideApply=true

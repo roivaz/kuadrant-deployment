@@ -80,7 +80,7 @@ local-setup: argocd kind-create-cluster-0 kind-create-cluster-1
 	$(MAKE) kind-apply-argocd
 	kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=120s
 	kubectl -n argocd wait --for=jsonpath='{.status.loadBalancer.ingress}' service/argocd-server
-	$(MAKE) argocd-login && $(ARGOCD) cluster add kind-kuadrant-local-1 --yes --cluster-endpoint kube-public
+	$(MAKE) argocd-login && $(ARGOCD) cluster add kind-kuadrant-local-1 --name kuadrant-local-1 --yes --cluster-endpoint kube-public
 	$(MAKE) argocd-url
 
 tear-down: kind-delete-cluster-0 kind-delete-cluster-1
