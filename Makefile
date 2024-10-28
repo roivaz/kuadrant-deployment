@@ -38,7 +38,7 @@ kind-create-cluster-%: kind kustomize ## Create the "kuadrant-local" kind cluste
 
 kind-install-metallb-%: export PODMAN_IGNORE_CGROUPSV1_WARNING="1"
 kind-install-metallb-%: yq
-	kubectl config set-context kind-kuadrant-local-$*
+	kubectl config use-context kind-kuadrant-local-$*
 	$(KUSTOMIZE) build https://github.com/metallb/metallb/config/native/?ref=v0.14.8 | kubectl apply -f -
 	kubectl wait --for condition=established --timeout=60s crd --all
 	kubectl -n metallb-system wait --for=condition=Available deployments controller --timeout=300s
@@ -76,7 +76,7 @@ argocd-login: argocd
 ##@ Local setup
 
 local-setup: argocd kind-create-cluster-0 kind-create-cluster-1
-	kubectl config set-context kind-kuadrant-local-0
+	kubectl config use-context kind-kuadrant-local-0
 	$(MAKE) kind-apply-argocd
 	kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=120s
 	kubectl -n argocd wait --for=jsonpath='{.status.loadBalancer.ingress}' service/argocd-server
@@ -104,13 +104,6 @@ KIND_VERSION ?= v0.24.0
 kind: $(KIND) ## Download kind locally if necessary
 $(KIND): $(LOCALBIN)
 	test -s $(KIND) || GOBIN=$(LOCALBIN) go install sigs.k8s.io/kind@$(KIND_VERSION)
-
-KIND_CLOUD_PROVIDER = $(PROJECT_PATH)/bin/cloud-provider-kind
-KIND_CLOUD_PROVIDER_VERSION ?= latest
-.PHONY: kind-cloud-provider
-kind-cloud-provider: $(KIND_CLOUD_PROVIDER) ## Download kind locally if necessary
-$(KIND_CLOUD_PROVIDER): $(LOCALBIN)
-	test -s $(KIND_CLOUD_PROVIDER) || GOBIN=$(LOCALBIN) go install sigs.k8s.io/cloud-provider-kind@$(KIND_CLOUD_PROVIDER_VERSION)
 
 ##@ Install argocd-cli
 ARGOCD ?= $(LOCALBIN)/argocd
