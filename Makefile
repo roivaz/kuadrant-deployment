@@ -28,30 +28,35 @@ export KUBECONFIG = $(PWD)/kubeconfig
 KIND_CLUSTER_NAME ?= kuadrant-local
 KIND_K8S_VERSION ?= v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865
 .PHONY: kind-create-cluster
-kind-create-cluster-%: kind start-cloud-provider-kind ## Create the "kuadrant-local" kind cluster.
-	KIND_EXPERIMENTAL_PROVIDER=$(CONTAINER_ENGINE) $(KIND) create cluster --wait 5m \
+kind-create-cluster-%: export KIND_EXPERIMENTAL_PROVIDER=$(CONTAINER_ENGINE)
+kind-create-cluster-%: kind kustomize ## Create the "kuadrant-local" kind cluster.
+	$(KIND) create cluster --wait 5m \
 		--image kindest/node:$(KIND_K8S_VERSION) \
 		--name $(KIND_CLUSTER_NAME)-$* \
 		--config util/kind-cluster.yaml
+	$(MAKE) kind-install-metallb-$*
+
+kind-install-metallb-%: export PODMAN_IGNORE_CGROUPSV1_WARNING="1"
+kind-install-metallb-%: yq
+	kubectl config set-context kind-kuadrant-local-$*
+	$(KUSTOMIZE) build https://github.com/metallb/metallb/config/native/?ref=v0.14.8 | kubectl apply -f -
+	kubectl wait --for condition=established --timeout=60s crd --all
+	kubectl -n metallb-system wait --for=condition=Available deployments controller --timeout=300s
+	curl -sL https://raw.githubusercontent.com/Kuadrant/kuadrant-operator/refs/heads/main/utils/docker-network-ipaddresspool.sh | \
+		bash -s -- kind $(YQ) $* | \
+		kubectl -n metallb-system apply -f -
+
 
 .PHONY: kind-delete-cluster
-kind-delete-cluster-%: kind stop-cloud-provider-kind ## Delete the "kuadrant-local" kind cluster.
-	- KIND_EXPERIMENTAL_PROVIDER=$(CONTAINER_ENGINE) $(KIND) delete cluster --name $(KIND_CLUSTER_NAME)-$*
+kind-delete-cluster-%: export KIND_EXPERIMENTAL_PROVIDER=$(CONTAINER_ENGINE)
+kind-delete-cluster-%: kind ## Delete the "kuadrant-local" kind cluster.
+	- $(KIND) delete cluster --name $(KIND_CLUSTER_NAME)-$*
 
 kind-apply-argocd: kustomize
 	$(KUSTOMIZE) build manifests/argocd-install | yq 'select(.kind == "CustomResourceDefinition")' | kubectl apply -f -
 	sleep 2
 	kubectl wait --for condition=established --timeout=60s crd --all
 	$(KUSTOMIZE) build manifests/argocd-install | yq 'select(.kind != "CustomResourceDefinition")' | kubectl apply -f -
-
-##@ Kind cloud provider
-CPK_PID_FILE = tmp/cloud-provider-kind.pid
-
-start-cloud-provider-kind: kind-cloud-provider tmp
-	hack/run-background-process.sh $(KIND_CLOUD_PROVIDER) $(CPK_PID_FILE) tmp/cloud-provider-kind.log
-
-stop-cloud-provider-kind:
-	- test -f $(CPK_PID_FILE) && kill -TERM $$(cat $(CPK_PID_FILE)) && rm $(CPK_PID_FILE)
 
 ##@ ArgoCD management targets
 ARGOCD_PASSWD = $(shell kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
@@ -70,15 +75,15 @@ argocd-login: argocd
 
 ##@ Local setup
 
-local-setup: argocd kind-create-cluster-1 kind-create-cluster-2
-	kubectl config set-context kind-kuadrant-local-1
+local-setup: argocd kind-create-cluster-0 kind-create-cluster-1
+	kubectl config set-context kind-kuadrant-local-0
 	$(MAKE) kind-apply-argocd
 	kubectl -n argocd wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --timeout=120s
 	kubectl -n argocd wait --for=jsonpath='{.status.loadBalancer.ingress}' service/argocd-server
-	$(MAKE) argocd-login && $(ARGOCD) cluster add kind-kuadrant-local-2 --yes --cluster-endpoint kube-public
+	$(MAKE) argocd-login && $(ARGOCD) cluster add kind-kuadrant-local-1 --yes --cluster-endpoint kube-public
 	$(MAKE) argocd-url
 
-tear-down: kind-delete-cluster-1 kind-delete-cluster-2
+tear-down: kind-delete-cluster-0 kind-delete-cluster-1
 
 clean:
 	rm -rf tmp bin kubeconfig
@@ -115,3 +120,11 @@ argocd: $(ARGOCD) ## Download argocd CLI locally if necessary
 $(ARGOCD): $(LOCALBIN)
 	curl -sL $(ARGOCD_DOWNLOAD_URL) -o $(ARGOCD)
 	chmod +x $(ARGOCD)
+
+##@ Install yq
+.PHONY: yq
+YQ ?= $(LOCALBIN)/yq
+YQ_VERSION ?= v4.40.5
+yq: $(YQ)
+$(YQ):
+	test -s $(YQ) || GOBIN=$(LOCALBIN) go install github.com/mikefarah/yq/v4@$(YQ_VERSION)

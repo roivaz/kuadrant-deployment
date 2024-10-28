@@ -13,7 +13,7 @@ spec:
     # repoURL: https://github.com/kuadrant/deployment
     # targetRevision: HEAD
     repoURL: https://github.com/roivaz/kuadrant-deployment
-    targetRevision: argocd-setup
+    targetRevision: argocd-multicluster-metallb
   syncPolicy:
     automated:
       selfHeal: true
