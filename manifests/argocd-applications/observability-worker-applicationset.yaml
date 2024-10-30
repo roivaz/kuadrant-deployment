@@ -14,7 +14,7 @@ spec:
     - clusters: {}
   template:
     metadata:
-      name: "observability.{{.nameNormalized}}"
+      name: "observability-worker.{{.nameNormalized}}"
     spec:
       destination:
         namespace: monitoring
