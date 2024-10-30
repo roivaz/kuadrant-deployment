@@ -26,6 +26,17 @@ spec:
         # targetRevision: HEAD
         repoURL: https://github.com/david-martin/deployment
         targetRevision: observability
+        kustomize:
+          patches:
+            - target:
+                group: monitoring.coreos.com
+                version: v1
+                kind: Prometheus
+                name: k8s
+              patch: |-
+                - op: replace
+                  path: /spec/remoteWrite/0/writeRelabelConfigs/0/replacement
+                  value: "{{ .name }}"
       syncPolicy:
         automated:
           selfHeal: true
