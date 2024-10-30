@@ -121,3 +121,20 @@ YQ_VERSION ?= v4.40.5
 yq: $(YQ)
 $(YQ):
 	test -s $(YQ) || GOBIN=$(LOCALBIN) go install github.com/mikefarah/yq/v4@$(YQ_VERSION)
+
+##@ Install skupper
+SKUPPER ?= $(LOCALBIN)/skupper
+SKUPPER_VERSION ?= 1.8.1
+# Adjust the OS name for the Skupper download URL if necessary
+ifeq ($(OS),darwin)
+    OS_DL := mac
+else
+    OS_DL := $(OS)
+endif
+SKUPPER_DOWNLOAD_URL ?= https://github.com/skupperproject/skupper/releases/download/$(SKUPPER_VERSION)/skupper-cli-$(SKUPPER_VERSION)-$(OS_DL)-$(ARCH).tgz
+skupper: $(SKUPPER) ## Download skupper CLI locally if necessary
+$(SKUPPER): $(LOCALBIN)
+	curl -sL $(SKUPPER_DOWNLOAD_URL) -o $(SKUPPER).tgz
+	tar -xf $(SKUPPER).tgz -C $(LOCALBIN)
+	chmod +x $(SKUPPER)
+	rm $(LOCALBIN)/skupper.tgz
