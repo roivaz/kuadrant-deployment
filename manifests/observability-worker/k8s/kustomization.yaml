@@ -38,4 +38,11 @@ patches:
     kind: ClusterRole
     name: kube-state-metrics
     version: v1
-
+# Remove grafana from workers
+- target:
+    labelSelector: "app.kubernetes.io/component=grafana"
+  patch: |
+    $patch: delete
+    kind: Kustomization
+    metadata:
+      name: whatever
