@@ -57,8 +57,6 @@ spec:
           volumeMounts:
             - name: thanos-ruler-monitoring-data
               mountPath: /thanos/data
-            - name: thanos-ruler-monitoring-rulefiles-0
-              mountPath: /etc/thanos/rules/thanos-ruler-monitoring-rulefiles-0
           terminationMessagePolicy: FallbackToLogsOnError
           image: 'quay.io/thanos/thanos:v0.29.0'
           args:
@@ -69,10 +67,6 @@ spec:
             - '--query=thanos-query.monitoring.svc:9090'
       serviceAccount: thanos-ruler
       volumes:
-        - name: thanos-ruler-monitoring-rulefiles-0
-          configMap:
-            name: thanos-ruler-monitoring-rulefiles-0
-            defaultMode: 420
         - name: thanos-ruler-monitoring-data
           emptyDir: {}
       dnsPolicy: ClusterFirst
