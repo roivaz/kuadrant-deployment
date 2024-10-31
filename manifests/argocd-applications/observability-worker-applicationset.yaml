@@ -16,6 +16,13 @@ spec:
     metadata:
       name: "observability-worker.{{.nameNormalized}}"
     spec:
+      ignoreDifferences:
+      - group: monitoring.coreos.com
+        kind: Prometheus
+        name: k8s
+        namespace: monitoring
+        jsonPointers:
+        - /spec/remoteWrite
       destination:
         namespace: monitoring
         name: "{{.name}}"
