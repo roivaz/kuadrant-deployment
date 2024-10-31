@@ -47,8 +47,12 @@ configMapGenerator:
   name: grafana-business-user
   namespace: monitoring
 - files:
-  - ./grafana/dashboards/grafana-dashboard-mgc-metrics.json
-  name: grafana-mgc-metrics
+  - ./grafana/dashboards/grafana-dashboard-controller-resources-metrics.json
+  name: grafana-controller-resources-metrics
+  namespace: monitoring
+- files:
+  - ./grafana/dashboards/grafana-dashboard-controller-runtime-metrics.json
+  name: grafana-controller-runtime-metrics
   namespace: monitoring
 patches:
 - path: ./grafana/grafana-deployment-patch.yaml
