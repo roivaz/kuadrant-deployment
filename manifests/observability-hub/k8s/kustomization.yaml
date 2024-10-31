@@ -57,3 +57,8 @@ patches:
     kind: Deployment
     name: grafana
     version: v1
+- target:
+    kind: Service
+    name: thanos-receive-router
+  path: ./thanos/manifests/thanos-receive-router-skupper-patch.yaml
+
