@@ -1,0 +1,23 @@
+kind: OperatorGroup
+apiVersion: operators.coreos.com/v1
+metadata:
+  name: sail
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec: {}
+
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: sailoperator
+  namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  channel: candidates
+  installPlanApproval: Automatic
+  name: sailoperator
+  source: operatorhubio-catalog
+  sourceNamespace: olm

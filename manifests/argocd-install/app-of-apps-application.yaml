@@ -1,0 +1,22 @@
+# App of Apps keeps ArgoCD Applications in sync
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: argocd
+spec:
+  destination:
+    namespace: argocd
+    name: in-cluster
+  project: default
+  source:
+    path: manifests/argocd-applications
+    # repoURL: https://github.com/kuadrant/deployment
+    # targetRevision: HEAD
+    repoURL: https://github.com/roivaz/kuadrant-deployment
+    targetRevision: argocd-multicluster-metallb
+  syncPolicy:
+    automated:
+      selfHeal: true
+
+
