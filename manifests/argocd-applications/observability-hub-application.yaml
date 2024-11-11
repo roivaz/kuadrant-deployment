@@ -1,16 +1,15 @@
-# App of Apps keeps ArgoCD Applications in sync
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app-of-apps
+  name: observability-hub
   namespace: argocd
 spec:
   destination:
-    namespace: argocd
+    namespace: monitoring
     name: in-cluster
   project: default
   source:
-    path: manifests/argocd-applications
+    path: manifests/observability-hub/k8s
     # repoURL: https://github.com/kuadrant/deployment
     # targetRevision: HEAD
     repoURL: https://github.com/david-martin/deployment
@@ -18,5 +17,3 @@ spec:
   syncPolicy:
     automated:
       selfHeal: true
-
-

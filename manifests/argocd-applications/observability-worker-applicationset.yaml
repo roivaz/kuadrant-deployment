@@ -1,0 +1,45 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: observability-worker
+  namespace: argocd
+spec:
+  ignoreApplicationDifferences:
+    - jsonPointers:
+        - /spec/syncPolicy
+        - /spec/source/targetRevision
+  goTemplate: true
+  generators:
+    - clusters: {}
+  template:
+    metadata:
+      name: "observability-worker.{{.nameNormalized}}"
+    spec:
+      destination:
+        namespace: monitoring
+        name: "{{.name}}"
+      project: default
+      source:
+        path: manifests/observability-worker/k8s
+        # repoURL: https://github.com/kuadrant/deployment
+        # targetRevision: HEAD
+        repoURL: https://github.com/david-martin/deployment
+        targetRevision: observability
+        kustomize:
+          patches:
+            - target:
+                group: monitoring.coreos.com
+                version: v1
+                kind: Prometheus
+                name: k8s
+              patch: |-
+                - op: replace
+                  path: /spec/remoteWrite/0/writeRelabelConfigs/0/replacement
+                  value: "{{ .name }}"
+      syncPolicy:
+        automated:
+          selfHeal: true
+          prune: true
+        syncOptions:
+          - ServerSideApply=true

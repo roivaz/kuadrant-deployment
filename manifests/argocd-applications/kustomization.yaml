@@ -5,3 +5,5 @@ resources:
   - argocd-install-application.yaml
   - operator-lifecycle-manager-applicationset.yaml
   - kuadrant-applicationset.yaml
+  - observability-hub-application.yaml
+  - observability-worker-applicationset.yaml

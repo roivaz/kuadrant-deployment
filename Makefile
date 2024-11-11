@@ -43,9 +43,8 @@ kind-install-metallb-%: yq
 	kubectl wait --for condition=established --timeout=60s crd --all
 	kubectl -n metallb-system wait --for=condition=Available deployments controller --timeout=300s
 	curl -sL https://raw.githubusercontent.com/Kuadrant/kuadrant-operator/refs/heads/main/utils/docker-network-ipaddresspool.sh | \
-		bash -s -- kind $(YQ) $* | \
+		bash -s -- kind $(YQ) $(shell expr $* + 1) | \
 		kubectl -n metallb-system apply -f -
-
 
 .PHONY: kind-delete-cluster
 kind-delete-cluster-%: export KIND_EXPERIMENTAL_PROVIDER=$(CONTAINER_ENGINE)
@@ -57,6 +56,19 @@ kind-apply-argocd: kustomize
 	sleep 2
 	kubectl wait --for condition=established --timeout=60s crd --all
 	$(KUSTOMIZE) build manifests/argocd-install | yq 'select(.kind != "CustomResourceDefinition")' | kubectl apply -f -
+
+kind-skupper-init-%: skupper
+	kubectl config use-context kind-kuadrant-local-$*
+	kubectl create namespace monitoring
+	$(SKUPPER) -n monitoring --ingress loadbalancer init
+
+kind-skupper-token-0: skupper
+	kubectl config use-context kind-kuadrant-local-0
+	$(SKUPPER) -n monitoring token create ~/skupper.token
+
+kind-skupper-link-%: skupper
+	kubectl config use-context kind-kuadrant-local-$*
+	$(SKUPPER) -n monitoring link create ~/skupper.token
 
 ##@ ArgoCD management targets
 ARGOCD_PASSWD = $(shell kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
@@ -82,6 +94,10 @@ local-setup: argocd kind-create-cluster-0 kind-create-cluster-1
 	kubectl -n argocd wait --for=jsonpath='{.status.loadBalancer.ingress}' service/argocd-server
 	$(MAKE) argocd-login && $(ARGOCD) cluster add kind-kuadrant-local-1 --name kuadrant-local-1 --yes --cluster-endpoint kube-public
 	$(MAKE) argocd-url
+	$(MAKE) kind-skupper-init-0
+	$(MAKE) kind-skupper-init-1
+	$(MAKE) kind-skupper-token-0
+	$(MAKE) kind-skupper-link-1
 
 tear-down: kind-delete-cluster-0 kind-delete-cluster-1
 
@@ -121,3 +137,21 @@ YQ_VERSION ?= v4.40.5
 yq: $(YQ)
 $(YQ):
 	test -s $(YQ) || GOBIN=$(LOCALBIN) go install github.com/mikefarah/yq/v4@$(YQ_VERSION)
+
+##@ Install skupper
+SKUPPER ?= $(LOCALBIN)/skupper
+SKUPPER_VERSION ?= 1.8.1
+# Adjust the OS name for the Skupper download URL if necessary
+ifeq ($(OS),darwin)
+    OS_DL := mac
+else
+    OS_DL := $(OS)
+endif
+SKUPPER_DOWNLOAD_URL ?= https://github.com/skupperproject/skupper/releases/download/$(SKUPPER_VERSION)/skupper-cli-$(SKUPPER_VERSION)-$(OS_DL)-$(ARCH).tgz
+skupper: $(SKUPPER) ## Download skupper CLI locally if necessary
+$(SKUPPER): $(LOCALBIN)
+	curl -sL $(SKUPPER_DOWNLOAD_URL) -o $(SKUPPER).tgz
+	tar -xf $(SKUPPER).tgz -C $(LOCALBIN)
+	chmod +x $(SKUPPER)
+	touch $(SKUPPER)
+	rm $(LOCALBIN)/skupper.tgz
