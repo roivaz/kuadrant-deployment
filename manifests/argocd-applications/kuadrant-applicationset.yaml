@@ -22,7 +22,7 @@ spec:
                 - path: manifests/kuadrant/**/argocd-config.yaml
   template:
     metadata:
-      name: "{{.path.basename}}.{{.name}}"
+      name: "{{.path.basename}}.{{.nameNormalized}}"
     spec:
       project: default
       source:
