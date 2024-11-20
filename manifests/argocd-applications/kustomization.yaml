@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: argocd
 resources:
-  - argocd-install-application.yaml
+  - argocd-install-applicationset.yaml
   - operator-lifecycle-manager-applicationset.yaml
   - kuadrant-applicationset.yaml
   - observability-hub-application.yaml
