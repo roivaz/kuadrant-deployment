@@ -3,7 +3,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: operator-lifecycle-manager
-  namespace: argocd
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:

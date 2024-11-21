@@ -3,7 +3,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: observability-worker
-  namespace: argocd
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -34,6 +33,7 @@ spec:
         namespace: monitoring
         name: "{{.name}}"
       project: default
+      
       source:
         path: manifests/observability-worker/k8s
         # repoURL: https://github.com/kuadrant/deployment
