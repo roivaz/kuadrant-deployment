@@ -1,3 +1,18 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: kuadrant-operator-catalog
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  sourceType: grpc
+  image: quay.io/kuadrant/kuadrant-operator-catalog:v1.0.0-rc4
+  displayName: Kuadrant Operators
+  publisher: grpc
+  updateStrategy:
+    registryPoll:
+      interval: 30m
+
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -6,11 +21,11 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  channel: stable
+  channel: preview
   installPlanApproval: Automatic
   name: kuadrant-operator
-  source: operatorhubio-catalog
-  sourceNamespace: olm
+  source: kuadrant-operator-catalog
+  sourceNamespace: kuadrant-system
 
 ---
 kind: OperatorGroup

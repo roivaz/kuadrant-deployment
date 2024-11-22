@@ -20,7 +20,7 @@ spec:
               # repoURL: https://github.com/kuadrant/deployment
               # revision: HEAD
               repoURL: https://github.com/roivaz/kuadrant-deployment
-              revision: ha-setup
+              revision: kuadrant-v1.0.0-rc4
               files:
                 - path: manifests/kuadrant/**/argocd-config.yaml
   template:
@@ -32,7 +32,7 @@ spec:
         # repoURL: https://github.com/kuadrant/deployment
         # targetRevision: main
         repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: ha-setup
+        targetRevision: kuadrant-v1.0.0-rc4
         path: '{{.path.path}}/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}'
       destination:
         name: "{{.name}}"
