@@ -6,7 +6,7 @@ This repo contains some example deployments for Kuadrant.
 
 Phase 1
 
-### Deploying Kuadrant via ArgoCD, configuring permissions and MultiAZ resilience
+## Deploying Kuadrant via ArgoCD, configuring permissions and MultiAZ resilience
 
 - HA deployments for Authorino and Limitador using topology constraints, multiple replicas (perhaps HPA), PodDisruption budgets and resource limits.
 - RBAC setup to allow develoepr 1 to deploy a HTTRoute based API , RLP and AuthPolicy to a specific namespace via ArgoCD.
