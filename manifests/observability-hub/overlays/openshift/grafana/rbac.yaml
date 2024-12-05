@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: thanos-query
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-monitoring-view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-monitoring-view
+subjects:
+- kind: ServiceAccount
+  name: thanos-query
+  namespace: monitoring
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-query-token
+  annotations:
+    # this will generate a long-lived token for the service account in the annotation
+    kubernetes.io/service-account.name: thanos-query
+type: kubernetes.io/service-account-token

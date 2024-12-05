@@ -2,6 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+- ../../base
 - ./thanos/manifests/thanos-query-deployment.yaml
 - ./thanos/manifests/thanos-query-service.yaml
 - ./thanos/manifests/thanos-query-serviceAccount.yaml
@@ -29,31 +30,6 @@ secretGenerator:
   name: grafana-datasources
   namespace: monitoring
 
-configMapGenerator:
-- files:
-  - ./grafana/dashboards/grafana-dashboard-istio-workload.json
-  name: grafana-istio-workload
-  namespace: monitoring
-- files:
-  - ./grafana/dashboards/grafana-dashboard-platform-eng.json
-  name: grafana-platform-eng
-  namespace: monitoring
-- files:
-  - ./grafana/dashboards/grafana-dashboard-app-developer.json
-  name: grafana-app-developer
-  namespace: monitoring
-- files:
-  - ./grafana/dashboards/grafana-dashboard-business-user.json
-  name: grafana-business-user
-  namespace: monitoring
-- files:
-  - ./grafana/dashboards/grafana-dashboard-controller-resources-metrics.json
-  name: grafana-controller-resources-metrics
-  namespace: monitoring
-- files:
-  - ./grafana/dashboards/grafana-dashboard-controller-runtime-metrics.json
-  name: grafana-controller-runtime-metrics
-  namespace: monitoring
 patches:
 - path: ./grafana/grafana-deployment-patch.yaml
   target:

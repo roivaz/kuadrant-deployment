@@ -18,11 +18,6 @@ spec:
             # evaluating that the secret exists it is safe to evaluate the other installation conditions
             - key: argocd.argoproj.io/secret-type
               operator: Exists
-            # Temporarily disable installing observability in OpenShift until we have an overlay for it
-            - key: vendor
-              operator: NotIn
-              values:
-                - "OpenShift"
   template:
     metadata:
       name: "observability-worker.{{.nameNormalized}}"
@@ -33,11 +28,11 @@ spec:
       project: default
       
       source:
-        path: manifests/observability-worker/k8s
+        path: 'manifests/observability-worker/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}'
         # repoURL: https://github.com/kuadrant/deployment
         # targetRevision: HEAD
-        repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: kuadrant-v1.0.0-rc4
+        repoURL: https://github.com/kuadrant/deployment
+        targetRevision: openshift-observability
         kustomize:
           patches:
             - target:
