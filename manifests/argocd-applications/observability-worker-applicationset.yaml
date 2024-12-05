@@ -18,9 +18,7 @@ spec:
             # evaluating that the secret exists it is safe to evaluate the other installation conditions
             - key: argocd.argoproj.io/secret-type
               operator: Exists
-            # Only install argocd through the repo yamls if the cluster secret has been marked with the
-            # following label. This allows users to make use of the resources in this repo while managing
-            # their own installation of argocd
+            # Temporarily disable installing observability in OpenShift until we have an overlay for it
             - key: vendor
               operator: NotIn
               values:
