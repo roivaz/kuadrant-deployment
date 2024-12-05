@@ -3,7 +3,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: observability-worker
-  namespace: argocd
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -11,7 +10,19 @@ spec:
         - /spec/source/targetRevision
   goTemplate: true
   generators:
-    - clusters: {}
+    - clusters:
+        selector:
+          matchExpressions:
+            # A cluster secret is not automatically created for the local cluster, so we need to
+            # add one (or edit the in-cluster cluste rthrough the argocd UI) for it. Only after
+            # evaluating that the secret exists it is safe to evaluate the other installation conditions
+            - key: argocd.argoproj.io/secret-type
+              operator: Exists
+            # Temporarily disable installing observability in OpenShift until we have an overlay for it
+            - key: vendor
+              operator: NotIn
+              values:
+                - "OpenShift"
   template:
     metadata:
       name: "observability-worker.{{.nameNormalized}}"
@@ -20,12 +31,13 @@ spec:
         namespace: monitoring
         name: "{{.name}}"
       project: default
+      
       source:
         path: manifests/observability-worker/k8s
         # repoURL: https://github.com/kuadrant/deployment
         # targetRevision: HEAD
         repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: ha-setup
+        targetRevision: kuadrant-v1.0.0-rc4
         kustomize:
           patches:
             - target:

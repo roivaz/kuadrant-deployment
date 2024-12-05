@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: operator-lifecycle-manager
+  name: observability-hub
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -25,16 +25,22 @@ spec:
               operator: NotIn
               values:
                 - "OpenShift"
+            # only install in Hyb cluster
+            - key: deployment.kuadrant.io/hub
+              operator: In
+              values:
+                - "true"
   template:
     metadata:
-      name: "olm.{{.nameNormalized}}"
+      name: observability-hub.{{.nameNormalized}}
+      namespace: argocd
     spec:
       destination:
-        namespace: olm
+        namespace: monitoring
         name: "{{.name}}"
       project: default
       source:
-        path: manifests/operator-lifecycle-manager
+        path: manifests/observability-hub/k8s
         # repoURL: https://github.com/kuadrant/deployment
         # targetRevision: HEAD
         repoURL: https://github.com/roivaz/kuadrant-deployment
@@ -42,6 +48,3 @@ spec:
       syncPolicy:
         automated:
           selfHeal: true
-          prune: true
-        syncOptions:
-          - ServerSideApply=true

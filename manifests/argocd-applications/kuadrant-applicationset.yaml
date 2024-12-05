@@ -2,7 +2,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: kuadrant-install
-  namespace: argocd
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -12,25 +11,29 @@ spec:
   generators:
     - matrix:
         generators:
-          - clusters: {}
+          - clusters:
+              selector:
+                matchExpressions:
+                  - key: argocd.argoproj.io/secret-type
+                    operator: Exists
           - git:
               # repoURL: https://github.com/kuadrant/deployment
               # revision: HEAD
               repoURL: https://github.com/roivaz/kuadrant-deployment
-              revision: ha-setup
+              revision: kuadrant-v1.0.0-rc4
               files:
                 - path: manifests/kuadrant/**/argocd-config.yaml
   template:
     metadata:
-      name: "{{.path.basename}}.{{.name}}"
+      name: "{{.path.basename}}.{{.nameNormalized}}"
     spec:
       project: default
       source:
         # repoURL: https://github.com/kuadrant/deployment
         # targetRevision: main
         repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: ha-setup
-        path: "{{.path.path}}"
+        targetRevision: kuadrant-v1.0.0-rc4
+        path: '{{.path.path}}/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}'
       destination:
         name: "{{.name}}"
       syncPolicy:
