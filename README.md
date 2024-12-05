@@ -39,6 +39,11 @@ To install in a remote cluster, it is assumed that an argocd instance is already
     * deployment.kuadrant.io/hub=true: marks this cluster as the hub. Certain resources will only be installed in the hub cluster.
     * vendor=OpenShift: marks this cluster as an OpenShift cluster. A k8s cluster is assumed if this label is not present.
 
-2. `kubectl create ns argocd && kubectl apply -f manifests/argocd-install/app-of-apps-application.yaml`
+2. Apply the `app-of-apps-application.yaml` manifest to the namespace where the argocd instance is running. Note that you will need the `yq` tool for the following command to work. You can install the tool using `make yq`, otherwise you can manually edit the yaml file.
 
-3. Coffee time. It should all be green afte some minutes.
+```
+> export ARGOCD_NAMESPACE="namespace-here"
+> yq e ".spec.destination.namespace = \"$ARGOCD_NAMESPACE\"" manifests/argocd-install/app-of-apps-application.yaml | kubectl -n $ARGOCD_NAMESPACE apply -f -
+```
+
+6. Coffee time. It should all be green afte some minutes.
