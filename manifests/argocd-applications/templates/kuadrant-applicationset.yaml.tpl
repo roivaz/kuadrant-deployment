@@ -17,25 +17,21 @@ spec:
                   - key: argocd.argoproj.io/secret-type
                     operator: Exists
           - git:
-              # repoURL: https://github.com/kuadrant/deployment
-              # revision: HEAD
-              repoURL: https://github.com/roivaz/kuadrant-deployment
-              revision: kuadrant-v1.0.0-rc4
+              repoURL: {{ $.Values.repoURL }}
+              revision: {{ $.Values.targetRevision }}
               files:
                 - path: manifests/kuadrant/**/argocd-config.yaml
   template:
     metadata:
-      name: "{{.path.basename}}.{{.nameNormalized}}"
+      name: {{` "{{.path.basename}}.{{.nameNormalized}}" `}}
     spec:
       project: default
       source:
-        # repoURL: https://github.com/kuadrant/deployment
-        # targetRevision: main
-        repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: kuadrant-v1.0.0-rc4
-        path: '{{.path.path}}/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}'
+        repoURL: {{ $.Values.repoURL }}
+        targetRevision: {{ $.Values.targetRevision }}
+        path: {{` '{{.path.path}}/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}' `}}
       destination:
-        name: "{{.name}}"
+        name: {{` "{{.name}}" `}}
       syncPolicy:
         automated:
           prune: true

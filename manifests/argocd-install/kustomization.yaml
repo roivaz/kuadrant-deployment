@@ -4,7 +4,7 @@ namespace: argocd
 resources:
   - namespace.yaml
   - https://raw.githubusercontent.com/argoproj/argo-cd/refs/tags/v2.12.6/manifests/install.yaml
-  - app-of-apps-application.yaml
+  # - app-of-apps-application.yaml
 patches:
   - target:
       kind: Service

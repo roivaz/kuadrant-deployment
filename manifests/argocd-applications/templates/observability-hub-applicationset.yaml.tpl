@@ -1,7 +1,8 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: argocd-install
+  name: observability-hub
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -20,31 +21,29 @@ spec:
             # Only install argocd through the repo yamls if the cluster secret has been marked with the
             # following label. This allows users to make use of the resources in this repo while managing
             # their own installation of argocd
-            - key: deployment.kuadrant.io/argocd-install
-              operator: In
+            - key: vendor
+              operator: NotIn
               values:
-                - "true"
-            # install argocd only in the Hub cluster
+                - "OpenShift"
+            # only install in Hyb cluster
             - key: deployment.kuadrant.io/hub
               operator: In
               values:
                 - "true"
-
   template:
     metadata:
-      name: "argocd-install.{{.nameNormalized}}"
+      name: {{` "observability-hub.{{.nameNormalized}}" `}}
       namespace: argocd
     spec:
       destination:
-        namespace: argocd
-        name: "{{.name}}"
+        namespace: monitoring
+        name: {{` "{{.name}}" `}}
       project: default
       source:
-        path: manifests/argocd-install
-        # repoURL: https://github.com/kuadrant/deployment
-        # targetRevision: HEAD
-        repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: kuadrant-v1.0.0-rc4
+        path: manifests/observability-hub/k8s
+        repoURL: {{ $.Values.repoURL }}
+        targetRevision: {{ $.Values.targetRevision }}
       syncPolicy:
         automated:
+          prune: true
           selfHeal: true

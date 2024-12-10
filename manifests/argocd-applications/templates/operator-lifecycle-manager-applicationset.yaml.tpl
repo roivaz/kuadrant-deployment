@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: observability-worker
+  name: operator-lifecycle-manager
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -18,37 +18,25 @@ spec:
             # evaluating that the secret exists it is safe to evaluate the other installation conditions
             - key: argocd.argoproj.io/secret-type
               operator: Exists
-            # Temporarily disable installing observability in OpenShift until we have an overlay for it
+            # Only install argocd through the repo yamls if the cluster secret has been marked with the
+            # following label. This allows users to make use of the resources in this repo while managing
+            # their own installation of argocd
             - key: vendor
               operator: NotIn
               values:
                 - "OpenShift"
   template:
     metadata:
-      name: "observability-worker.{{.nameNormalized}}"
+      name: {{` "olm.{{.nameNormalized}}" `}}
     spec:
       destination:
-        namespace: monitoring
-        name: "{{.name}}"
+        namespace: olm
+        name: {{` "{{.name}}" `}}
       project: default
-      
       source:
-        path: manifests/observability-worker/k8s
-        # repoURL: https://github.com/kuadrant/deployment
-        # targetRevision: HEAD
-        repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: kuadrant-v1.0.0-rc4
-        kustomize:
-          patches:
-            - target:
-                group: monitoring.coreos.com
-                version: v1
-                kind: Prometheus
-                name: k8s
-              patch: |-
-                - op: replace
-                  path: /spec/remoteWrite/0/writeRelabelConfigs/0/replacement
-                  value: "{{ .name }}"
+        path: manifests/operator-lifecycle-manager
+        repoURL: {{ $.Values.repoURL }}
+        targetRevision: {{ $.Values.targetRevision }}
       syncPolicy:
         automated:
           selfHeal: true

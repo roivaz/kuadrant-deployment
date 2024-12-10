@@ -1,0 +1,23 @@
+# App of Apps keeps ArgoCD ApplicationSets in sync
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+spec:
+  destination:
+    namespace: argocd
+    name: in-cluster
+  project: default
+  source:
+    path: manifests/argocd-applications
+    repoURL: https://github.com/kuadrant/deployment
+    targetRevision: main
+    helm:
+      parameters:
+        - name: repoURL
+          value: $ARGOCD_APP_SOURCE_REPO_URL
+        - name: targetRevision
+          value: $ARGOCD_APP_SOURCE_TARGET_REVISION      
+  syncPolicy:
+    automated:
+      selfHeal: true

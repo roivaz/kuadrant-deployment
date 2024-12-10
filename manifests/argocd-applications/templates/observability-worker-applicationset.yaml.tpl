@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: observability-hub
+  name: observability-worker
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -18,33 +18,38 @@ spec:
             # evaluating that the secret exists it is safe to evaluate the other installation conditions
             - key: argocd.argoproj.io/secret-type
               operator: Exists
-            # Only install argocd through the repo yamls if the cluster secret has been marked with the
-            # following label. This allows users to make use of the resources in this repo while managing
-            # their own installation of argocd
+            # Temporarily disable installing observability in OpenShift until we have an overlay for it
             - key: vendor
               operator: NotIn
               values:
                 - "OpenShift"
-            # only install in Hyb cluster
-            - key: deployment.kuadrant.io/hub
-              operator: In
-              values:
-                - "true"
   template:
     metadata:
-      name: observability-hub.{{.nameNormalized}}
-      namespace: argocd
+      name: {{` "observability-worker.{{.nameNormalized}}" `}}
     spec:
       destination:
         namespace: monitoring
-        name: "{{.name}}"
+        name: {{` "{{.name}}" `}}
       project: default
+      
       source:
-        path: manifests/observability-hub/k8s
-        # repoURL: https://github.com/kuadrant/deployment
-        # targetRevision: HEAD
-        repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: kuadrant-v1.0.0-rc4
+        path: manifests/observability-worker/k8s
+        repoURL: {{ $.Values.repoURL }}
+        targetRevision: {{ $.Values.targetRevision }}
+        kustomize:
+          patches:
+            - target:
+                group: monitoring.coreos.com
+                version: v1
+                kind: Prometheus
+                name: k8s
+              patch: |-
+                - op: replace
+                  path: /spec/remoteWrite/0/writeRelabelConfigs/0/replacement
+                  value: {{` "{{ .name }}" `}}
       syncPolicy:
         automated:
           selfHeal: true
+          prune: true
+        syncOptions:
+          - ServerSideApply=true
