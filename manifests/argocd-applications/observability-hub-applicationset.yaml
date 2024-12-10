@@ -18,14 +18,7 @@ spec:
             # evaluating that the secret exists it is safe to evaluate the other installation conditions
             - key: argocd.argoproj.io/secret-type
               operator: Exists
-            # Only install argocd through the repo yamls if the cluster secret has been marked with the
-            # following label. This allows users to make use of the resources in this repo while managing
-            # their own installation of argocd
-            - key: vendor
-              operator: NotIn
-              values:
-                - "OpenShift"
-            # only install in Hyb cluster
+            # only install in Hub cluster
             - key: deployment.kuadrant.io/hub
               operator: In
               values:
@@ -40,11 +33,11 @@ spec:
         name: "{{.name}}"
       project: default
       source:
-        path: manifests/observability-hub/k8s
+        path: 'manifests/observability-hub/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}'
         # repoURL: https://github.com/kuadrant/deployment
         # targetRevision: HEAD
-        repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: kuadrant-v1.0.0-rc4
+        repoURL: https://github.com/kuadrant/deployment
+        targetRevision: openshift-observability
       syncPolicy:
         automated:
           selfHeal: true
