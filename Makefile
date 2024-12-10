@@ -20,6 +20,18 @@ $(LOCALBIN):
 tmp:
 	umask 0000 && mkdir -p $@
 
+##@ Deploy
+REPO_URL ?= https://github.com/kuadrant/deployment
+TARGET_REVISION ?= main
+ARGOCD_NAMESPACE ?= argocd
+deploy: yq
+	cat manifests/app-of-apps-application.yaml |\
+		$(YQ) e '.spec.source.repoURL = "$(REPO_URL)"' |\
+		$(YQ) e '.spec.source.targetRevision = "$(TARGET_REVISION)"' |\
+		$(YQ) e '.spec.destination.namespace = "$(ARGOCD_NAMESPACE)"' |\
+		kubectl -n $(ARGOCD_NAMESPACE) apply -f -
+
+
 ##@ Kind
 
 ## Targets to use kind for deployment https://kind.sigs.k8s.io
@@ -98,6 +110,7 @@ local-setup: argocd kind-create-cluster-0 kind-create-cluster-1
                 --label deployment.kuadrant.io/hub=true && \
 		$(ARGOCD) cluster add kind-kuadrant-local-1 --name kuadrant-local-1 --yes --cluster-endpoint kube-public
 	$(MAKE) argocd-url
+	$(MAKE) deploy REPO_URL=$(REPO_URL) TARGET_REVISION=$(TARGET_REVISION) ARGOCD_NAMESPACE=$(ARGOCD_NAMESPACE)
 	$(MAKE) kind-skupper-init-0
 	$(MAKE) kind-skupper-init-1
 	$(MAKE) kind-skupper-token-0

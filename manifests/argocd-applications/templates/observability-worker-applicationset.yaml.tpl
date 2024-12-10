@@ -20,19 +20,17 @@ spec:
               operator: Exists
   template:
     metadata:
-      name: "observability-worker.{{.nameNormalized}}"
+      name: {{` "observability-worker.{{.nameNormalized}}" `}}
     spec:
       destination:
         namespace: monitoring
-        name: "{{.name}}"
+        name: {{` "{{.name}}" `}}
       project: default
       
       source:
-        path: 'manifests/observability-worker/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}'
-        # repoURL: https://github.com/kuadrant/deployment
-        # targetRevision: HEAD
-        repoURL: https://github.com/kuadrant/deployment
-        targetRevision: openshift-observability
+        path: {{` 'manifests/observability-worker/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}' `}}
+        repoURL: {{ $.Values.repoURL }}
+        targetRevision: {{ $.Values.targetRevision }}
         kustomize:
           patches:
             - target:
@@ -43,7 +41,7 @@ spec:
               patch: |-
                 - op: replace
                   path: /spec/remoteWrite/0/writeRelabelConfigs/0/replacement
-                  value: "{{ .name }}"
+                  value: {{` "{{ .name }}" `}}
       syncPolicy:
         automated:
           selfHeal: true

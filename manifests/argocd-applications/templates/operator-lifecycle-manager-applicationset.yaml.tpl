@@ -1,7 +1,8 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: argocd-install
+  name: operator-lifecycle-manager
 spec:
   ignoreApplicationDifferences:
     - jsonPointers:
@@ -20,31 +21,25 @@ spec:
             # Only install argocd through the repo yamls if the cluster secret has been marked with the
             # following label. This allows users to make use of the resources in this repo while managing
             # their own installation of argocd
-            - key: deployment.kuadrant.io/argocd-install
-              operator: In
+            - key: vendor
+              operator: NotIn
               values:
-                - "true"
-            # install argocd only in the Hub cluster
-            - key: deployment.kuadrant.io/hub
-              operator: In
-              values:
-                - "true"
-
+                - "OpenShift"
   template:
     metadata:
-      name: "argocd-install.{{.nameNormalized}}"
-      namespace: argocd
+      name: {{` "olm.{{.nameNormalized}}" `}}
     spec:
       destination:
-        namespace: argocd
-        name: "{{.name}}"
+        namespace: olm
+        name: {{` "{{.name}}" `}}
       project: default
       source:
-        path: manifests/argocd-install
-        # repoURL: https://github.com/kuadrant/deployment
-        # targetRevision: HEAD
-        repoURL: https://github.com/roivaz/kuadrant-deployment
-        targetRevision: kuadrant-v1.0.0-rc4
+        path: manifests/operator-lifecycle-manager
+        repoURL: {{ $.Values.repoURL }}
+        targetRevision: {{ $.Values.targetRevision }}
       syncPolicy:
         automated:
           selfHeal: true
+          prune: true
+        syncOptions:
+          - ServerSideApply=true
