@@ -35,9 +35,9 @@ To install in a remote cluster, it is assumed that an argocd instance is already
 
 1. Label the clusters in your argocd instance. To do so, go to "**settings** > **clusters** > **<cluster-name>** > **edit**" in the argocd UI. This can also be achieved using the argocd CLI. The following labels must be set, depending on the desired effect:
 
-    * argocd.argoproj.io/secret-type=cluster: all applicationsets expect that clusters have this label. This label is always present for clusters different that the 'in-cluster' one, which might not have it, depending on how argocd was installed. Make sure that 'in-cluster' also has this label, as it acts as the hub cluster.
-    * deployment.kuadrant.io/hub=true: marks this cluster as the hub. Certain resources will only be installed in the hub cluster.
-    * vendor=OpenShift: marks this cluster as an OpenShift cluster. A k8s cluster is assumed if this label is not present.
+    * `argocd.argoproj.io/secret-type=cluster`: all applicationsets expect that clusters have this label. This label is always present for clusters different that the 'in-cluster' one, which might not have it, depending on how argocd was installed. Make sure that 'in-cluster' also has this label, as it acts as the hub cluster.
+    * `deployment.kuadrant.io/hub=true`: marks this cluster as the hub. Certain resources will only be installed in the hub cluster.
+    * `vendor=OpenShift`: marks this cluster as an OpenShift cluster. A k8s cluster is assumed if this label is not present.
 
 2. Use the following target to apply the `manifests/app-of-apps-application.yaml` manifest that will automatically manage all the other Applications in all the clusters. Make sure you have the correct kubeconfig context loaded in your shell.
 
