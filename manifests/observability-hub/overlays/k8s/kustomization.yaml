@@ -23,6 +23,12 @@ resources:
 generatorOptions:
   disableNameSuffixHash: true
 
+configMapGenerator:
+- files:
+  - ./grafana/dashboards/grafana-dashboard-istio-workload.json
+  name: grafana-istio-workload
+  namespace: monitoring
+
 secretGenerator:
 - behavior: replace
   files:

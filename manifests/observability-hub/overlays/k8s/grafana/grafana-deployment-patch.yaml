@@ -8,10 +8,10 @@
 - op: add
   path: /spec/template/spec/volumes/-
   value:
-    name: grafana-platform-eng
+    name: grafana-platform-engineer
     configMap:
      defaultMode: 420
-     name: grafana-platform-eng
+     name: grafana-platform-engineer
 - op: add
   path: /spec/template/spec/volumes/-
   value:
@@ -48,8 +48,8 @@
 - op: add
   path: /spec/template/spec/containers/0/volumeMounts/-
   value:
-    name: grafana-platform-eng
-    mountPath: /grafana-dashboard-definitions/0/grafana-platform-eng
+    name: grafana-platform-engineer
+    mountPath: /grafana-dashboard-definitions/0/grafana-platform-engineer
 - op: add
   path: /spec/template/spec/containers/0/volumeMounts/-
   value:
