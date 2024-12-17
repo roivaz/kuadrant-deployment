@@ -25,19 +25,18 @@ spec:
                 - "true"
   template:
     metadata:
-      name: observability-hub.{{.nameNormalized}}
+      name: {{` "observability-hub.{{.nameNormalized}}" `}}
       namespace: argocd
     spec:
       destination:
         namespace: monitoring
-        name: "{{.name}}"
+        name: {{` "{{.name}}" `}}
       project: default
       source:
-        path: 'manifests/observability-hub/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}'
-        # repoURL: https://github.com/kuadrant/deployment
-        # targetRevision: HEAD
-        repoURL: https://github.com/kuadrant/deployment
-        targetRevision: openshift-observability
+        path: {{` 'manifests/observability-hub/overlays/{{or (index .metadata.labels "vendor") "k8s" | lower}}' `}}
+        repoURL: {{ $.Values.repoURL }}
+        targetRevision: {{ $.Values.targetRevision }}
       syncPolicy:
         automated:
+          prune: true
           selfHeal: true

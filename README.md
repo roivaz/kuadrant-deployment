@@ -35,15 +35,31 @@ To install in a remote cluster, it is assumed that an argocd instance is already
 
 1. Label the clusters in your argocd instance. To do so, go to "**settings** > **clusters** > **<cluster-name>** > **edit**" in the argocd UI. This can also be achieved using the argocd CLI. The following labels must be set, depending on the desired effect:
 
-    * argocd.argoproj.io/secret-type=cluster: all applicationsets expect that clusters have this label. This label is always present for clusters different that the 'in-cluster' one, which might not have it, depending on how argocd was installed. Make sure that 'in-cluster' also has this label, as it acts as the hub cluster.
-    * deployment.kuadrant.io/hub=true: marks this cluster as the hub. Certain resources will only be installed in the hub cluster.
-    * vendor=OpenShift: marks this cluster as an OpenShift cluster. A k8s cluster is assumed if this label is not present.
+    * `argocd.argoproj.io/secret-type=cluster`: all applicationsets expect that clusters have this label. This label is always present for clusters different that the 'in-cluster' one, which might not have it, depending on how argocd was installed. Make sure that 'in-cluster' also has this label, as it acts as the hub cluster.
+    * `deployment.kuadrant.io/hub=true`: marks this cluster as the hub. Certain resources will only be installed in the hub cluster.
+    * `vendor=OpenShift`: marks this cluster as an OpenShift cluster. A k8s cluster is assumed if this label is not present.
 
-2. Apply the `app-of-apps-application.yaml` manifest to the namespace where the argocd instance is running. Note that you will need the `yq` tool for the following command to work. You can install the tool using `make yq`, otherwise you can manually edit the yaml file.
+2. Use the following target to apply the `manifests/app-of-apps-application.yaml` manifest that will automatically manage all the other Applications in all the clusters. Make sure you have the correct kubeconfig context loaded in your shell.
 
 ```
-> export ARGOCD_NAMESPACE="namespace-here"
-> yq e ".spec.destination.namespace = \"$ARGOCD_NAMESPACE\"" manifests/argocd-install/app-of-apps-application.yaml | kubectl -n $ARGOCD_NAMESPACE apply -f -
+make deploy ARGOCD_NAMESPACE="<argocd-installation-namespace>"
 ```
 
-6. Coffee time. It should all be green afte some minutes.
+1. Coffee time. It should all be green afte some minutes.
+
+
+## Development
+
+Fork the repo and create a branch. Then, deploy setting your repoURL and targetRevision accordingly.
+
+* For a local setup with kind use:
+
+```
+make local-setup REPO_URL=<forked-repository-url> TARGET_REVISION=<branch|tag|commit>
+``` 
+
+* For a remote setup you need to also add the namespace where argocd is installed. Make sure to load the appropriate kubeconfig context.
+
+```
+make deploy REPO_URL=<forked-repository-url> TARGET_REVISION=<branch|tag|commit> ARGOCD_NAMESPACE=<argocd-installation-namespace>
+```

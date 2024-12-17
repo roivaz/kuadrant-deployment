@@ -1,4 +1,4 @@
-# App of Apps keeps ArgoCD Applications in sync
+# App of Apps keeps ArgoCD ApplicationSets in sync
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -10,12 +10,14 @@ spec:
   project: default
   source:
     path: manifests/argocd-applications
-    # repoURL: https://github.com/kuadrant/deployment
-    # targetRevision: HEAD
     repoURL: https://github.com/kuadrant/deployment
-    targetRevision: openshift-observability
+    targetRevision: main
+    helm:
+      parameters:
+        - name: repoURL
+          value: $ARGOCD_APP_SOURCE_REPO_URL
+        - name: targetRevision
+          value: $ARGOCD_APP_SOURCE_TARGET_REVISION      
   syncPolicy:
     automated:
       selfHeal: true
-
-

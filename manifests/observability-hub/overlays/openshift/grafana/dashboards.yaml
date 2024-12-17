@@ -1,6 +1,8 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   name: grafana-platform-engineer
 spec:
   instanceSelector:
@@ -13,6 +15,8 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   name: grafana-business-user
 spec:
   instanceSelector:
@@ -25,6 +29,8 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   name: grafana-controller-resources-metrics
 spec:
   instanceSelector:
@@ -37,6 +43,8 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   name: grafana-controller-runtime-metrics
 spec:
   instanceSelector:
@@ -49,6 +57,8 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   name: grafana-app-developer
 spec:
   instanceSelector:
