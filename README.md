@@ -1,7 +1,7 @@
 # deployment
-This repo contains some example deployments for Kuadrant. 
+This repo contains some example deployments for Kuadrant.
 
-- All deployments use kustomize and regular kuberentes resources
+- All deployments use kustomize and regular kubernetes resources
 - We will provide basic instructions for installing and configuring ArgoCD but more advanced topics should be found via argocd docs
 
 ## Phases
@@ -19,11 +19,11 @@ This repo contains some example deployments for Kuadrant.
 
 - Extend on phase 1 to include a second cluster
 - Introduce an external redis configuration
-- Introduce and install thanos 
+- Introduce and install thanos
 
 ## Instructions
 
-The following instructions assume you have cloned the repo locally adn are in the project's root directory.
+The following instructions assume you have cloned the repo locally and are in the project's root directory.
 
 ### Local
 
@@ -45,7 +45,7 @@ To install in a remote cluster, it is assumed that an argocd instance is already
 make deploy ARGOCD_NAMESPACE="<argocd-installation-namespace>"
 ```
 
-1. Coffee time. It should all be green afte some minutes.
+1. Coffee time. It should all be green after some minutes.
 
 
 ## Development
@@ -56,7 +56,7 @@ Fork the repo and create a branch. Then, deploy setting your repoURL and targetR
 
 ```
 make local-setup REPO_URL=<forked-repository-url> TARGET_REVISION=<branch|tag|commit>
-``` 
+```
 
 * For a remote setup you need to also add the namespace where argocd is installed. Make sure to load the appropriate kubeconfig context.
 
