@@ -49,7 +49,7 @@ kind-create-cluster-%: kind kustomize ## Create the "kuadrant-local" kind cluste
 	$(MAKE) kind-install-metallb-$*
 
 kind-install-metallb-%: export PODMAN_IGNORE_CGROUPSV1_WARNING="1"
-kind-isntall-metallb-%: export KUBECONFIG = $(PWD)/kubeconfig
+kind-install-metallb-%: export KUBECONFIG = $(PWD)/kubeconfig
 kind-install-metallb-%: yq
 	kubectl config use-context kind-kuadrant-local-$*
 	$(KUSTOMIZE) build https://github.com/metallb/metallb/config/native/?ref=v0.14.8 | kubectl apply -f -
@@ -67,10 +67,10 @@ kind-delete-cluster-%: kind ## Delete the "kuadrant-local" kind cluster.
 
 kind-apply-argocd: export KUBECONFIG = $(PWD)/kubeconfig
 kind-apply-argocd: kustomize
-	$(KUSTOMIZE) build manifests/argocd-install | yq 'select(.kind == "CustomResourceDefinition")' | kubectl apply -f -
+	$(KUSTOMIZE) build manifests/argocd-install | $(YQ) 'select(.kind == "CustomResourceDefinition")' | kubectl apply -f -
 	sleep 2
 	kubectl wait --for condition=established --timeout=60s crd --all
-	$(KUSTOMIZE) build manifests/argocd-install | yq 'select(.kind != "CustomResourceDefinition")' | kubectl apply -f -
+	$(KUSTOMIZE) build manifests/argocd-install | $(YQ) 'select(.kind != "CustomResourceDefinition")' | kubectl apply -f -
 
 kind-skupper-init-%: export KUBECONFIG = $(PWD)/kubeconfig
 kind-skupper-init-%: skupper
