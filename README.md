@@ -29,6 +29,15 @@ The following instructions assume you have cloned the repo locally and are in th
 
 To deploy the setup in local kind clusters just issue a `make local-setup` command in a shell. Information on how to connect to the argocd UI will be printed in the output.
 
+TIP: If using Linux, possibly `make local-setup` target fails with no clear information about the reason of the failure (you will need to increase kind log verbosity level starting with `-v 4`). It will possibly be caused by running out of inotify resources and inotify file watches. In order to increase them add the following 2 lines to `/etc/sysctl.conf`:
+
+```
+fs.inotify.max_user_instances=8192
+fs.inotify.max_user_watches=524288
+```
+
+And execute `sudo sysctl -p` so the new inotify configuration is loaded.
+
 ### Remote
 
 To install in a remote cluster, it is assumed that an argocd instance is already up and running in the cluster. An example is available on how to install an argocd instance in OpenShift using the argocd-operator.
