@@ -33,6 +33,19 @@ spec:
           labelSelector:
             matchLabels:
               app: istiod
+    meshConfig:
+      defaultConfig:
+        proxyHeaders:
+          forwardedClientCert: SANITIZE
+          server:
+            disabled: true
+          attemptCount:
+            disabled: true
+          envoyDebugHeaders:
+            disabled: true
+          metadataExchangeHeaders:
+            mode: IN_MESH
+
 ---
 # Configure envoy access logging.
 apiVersion: telemetry.istio.io/v1alpha1
