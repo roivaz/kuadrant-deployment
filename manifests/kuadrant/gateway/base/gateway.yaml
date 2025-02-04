@@ -9,11 +9,11 @@ kind: Gateway
 metadata:
   name: public
   annotations:
-    # You can add here annotations to configure how the Service that exposes the gateway.
+    # You can add here annotations to configure how the Service exposes the Gateway pods.
     # This is useful to configure how the cloud provider exposes the Gateway to the internet.
     # See the cloud provider's documentation to discover available options.
     #
-    # Example: this annotations configures the AWS cloud load balancer to enable proxy-protocol (highly recommentded
+    # Example: this annotation configures the AWS cloud load balancer to enable proxy-protocol (highly recommentded
     # for source IP detection)
     service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
 
@@ -53,7 +53,7 @@ spec:
 # service account for istio Gateway, otherwise it is deleted by argocd
 # because istio propagates all labels and annotations from the Gatewawy to the
 # ServiceAccount, which includes the argocd "app.kubernetes.io/instance=xxxx" label.
-# If the resource is not added explicitely to the Application, agocd deletes it due to this label.
+# If the resource is not added explicitly to the Application, agocd deletes it due to this label.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
