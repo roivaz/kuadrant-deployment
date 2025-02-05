@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: public
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public
+  annotations:
+    # You can add here annotations to configure how the Service exposes the Gateway pods.
+    # This is useful to configure how the cloud provider exposes the Gateway to the internet.
+    # See the cloud provider's documentation to discover available options.
+    #
+    # Example: this annotation configures the AWS cloud load balancer to enable proxy-protocol (highly recommentded
+    # for source IP detection)
+    service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+
+    # You can apply Istio Mesh configuration options on a per Gateway basis using the "proxy.istio.io/config"
+    # annotation. See https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#ProxyConfig for available options.
+    #
+    # Example: this will enable proxy protocol in the gateway listeners as well as configure the gateway as the internet
+    # facing one (first trusted proxy in the request path), which is important for source IP detection
+    # (https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#config-http-conn-man-headers-x-forwarded-for).
+    proxy.istio.io/config: '{"gatewayTopology":{"numTrustedProxies":0,"proxyProtocol":{}}}'
+spec:
+  gatewayClassName: istio
+  listeners:
+    # HTTP
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+    # HTTPS
+    - name: https
+      hostname: "your.hostname.here"
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            name: certificate
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: All
+
+---
+# service account for istio Gateway, otherwise it is deleted by argocd
+# because istio propagates all labels and annotations from the Gatewawy to the
+# ServiceAccount, which includes the argocd "app.kubernetes.io/instance=xxxx" label.
+# If the resource is not added explicitly to the Application, agocd deletes it due to this label.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: public-istio
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: public
+spec:
+  # Match the generated Deployment by reference
+  # Note: Do not use `kind: Gateway`.
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: public-istio
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: public
+spec:
+  maxUnavailable: 25%
+  selector:
+    # Match the generated Deployment by label
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: public
+
+---
+# [NOTE] This is a partial Deployment resource. The expected behavior is that
+# argocd patches the kuadrant-operator owned Deployment instance, adding these fields
+# but without touching naything else.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-istio
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: public
+        - maxSkew: 1
+          topologyKey: kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: public
+
+---
+######################
+#### HTTP -> HTTPS ###
+######################
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: http-filter-redirect
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: public
+      sectionName: http
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: public
+      sectionName: http-pub
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
