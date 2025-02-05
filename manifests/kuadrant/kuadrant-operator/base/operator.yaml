@@ -6,7 +6,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   sourceType: grpc
-  image: quay.io/kuadrant/kuadrant-operator-catalog:v1.0.0
+  image: quay.io/kuadrant/kuadrant-operator-catalog:v1.0.2
   displayName: Kuadrant Operators
   publisher: grpc
   updateStrategy:
